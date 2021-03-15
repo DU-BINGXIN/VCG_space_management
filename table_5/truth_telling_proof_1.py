@@ -1,0 +1,1433 @@
+'''
+import pandas as pd
+import random
+import itertools
+
+# table = 10, course = 3, consumer = 30
+
+
+def getIndexes(p, p_report):
+    """ Get index positions of value in dataframe."""
+    listOfPos = list()
+    # Get bool dataframe with True at positions where the given value exists
+    result = p.isin([p_report])
+    # Get list of columns that contains the value
+    seriesObj = result.any()
+    columnNames = list(seriesObj[seriesObj == True].index)
+    # Iterate over list of columns and fetch the rows indexes where value exists
+    for col in columnNames:
+        rows = list(result[col][result[col] == True].index)
+        for row in rows:
+            listOfPos.append([row, col, p_report])
+    # Return a list of tuples indicating the positions of value in the dataframe
+    return listOfPos
+
+
+utility_change = 0
+bug = 0  # initialize the number of situations when truth-telling strategy is not dominant strategy
+for z in range(10000):
+    consumer = 30
+    report_table = []
+    random_table = []
+    for i in range(consumer):
+        pi = pd.DataFrame(
+            [
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+            ],
+            columns=["A", "B", "C"],
+            index=[1, 2, 3, 4, 5],
+        )
+        pi_random = pd.DataFrame(
+            [
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+            ],
+            columns=["A", "B", "C"],
+            index=[1, 2, 3, 4, 5],
+        )
+
+        if i == 0:
+            p1 = pi
+            pi_A = pi.sort_values("A", ascending=False)
+            pi_A = pi_A["A"]
+            pi_A_list = pi_A.tolist()
+            pi_B = pi.sort_values("B", ascending=False)
+            pi_B = pi_B["B"]
+            pi_B_list = pi_B.tolist()
+            pi_C = pi.sort_values("C", ascending=False)
+            pi_C = pi_C["C"]
+            pi_C_list = pi_C.tolist()
+            pi_value_list = pi_A_list + pi_B_list + pi_C_list
+            pi_value_list.sort(reverse=True)
+            # one reported situation
+            pi_value = pi_value_list[0]
+            pi_report = [i + 1,] + getIndexes(pi, pi_value)[0]
+            p1_report = pi_report
+
+        pi_random_A = pi_random.sort_values("A", ascending=False)
+        pi_random_A = pi_random_A["A"]
+        pi_random_A_list = pi_random_A.tolist()
+        pi_random_B = pi_random.sort_values("B", ascending=False)
+        pi_random_B = pi_random_B["B"]
+        pi_random_B_list = pi_random_B.tolist()
+        pi_random_C = pi_random.sort_values("C", ascending=False)
+        pi_random_C = pi_random_C["C"]
+        pi_random_C_list = pi_random_C.tolist()
+        pi_random_value_list = pi_random_A_list + pi_random_B_list + pi_random_C_list
+        pi_random_value_list.sort(reverse=True)
+        # one randomly reported situation
+        pi_random_value = pi_random_value_list[0]
+        pi_random_report = [i + 1,] + getIndexes(pi_random, pi_random_value)[0]
+        random_table = random_table + [pi_random_report]
+
+        truth_table = random_table.copy()
+        for j in truth_table:
+            if j[0] == 1:
+                truth_table.remove(j)
+        truth_table.append(p1_report)
+    # テーブル数
+    seats = 5
+    print("--------------------random-telling---------------------------")
+    max_outcome = 0
+    max_social_value = 0
+    sec_social_value = 0
+    best_mu = 0
+    sec_mu = 0
+    utility_random = 0
+
+    for k in range(1, seats):
+        mus = list(itertools.combinations(random_table, k))
+        for mu in mus:
+            player_list = []
+            for bid in mu:
+                player_list.append(bid[0])
+            if len(set(player_list)) != len(player_list):
+                mus.remove(mu)
+        for mu in mus:
+            tmp_social_value = 0
+            tmp_seats = 0
+            for bid in mu:
+                tmp_social_value = tmp_social_value + bid[3]
+                tmp_seats = tmp_seats + bid[1]
+            if max_social_value < tmp_social_value:
+                if tmp_seats <= seats:
+                    max_social_value = tmp_social_value
+                    best_mu = mu
+    for allo in best_mu:
+        if allo[0] == 1:
+            for j in random_table:
+                if j[0] == 1:
+                    random_table.remove(j)
+            for k in range(1, seats):
+                mus = list(itertools.combinations(random_table, k))
+                for mu in mus:
+                    player_list = []
+                    for bid in mu:
+                        player_list.append(bid[0])
+                    if len(set(player_list)) != len(player_list):
+                        mus.remove(mu)
+                for mu in mus:
+                    tmp_social_value = 0
+                    tmp_seats = 0
+                    for bid in mu:
+                        tmp_social_value = tmp_social_value + bid[3]
+                        tmp_seats = tmp_seats + bid[1]
+                    if sec_social_value < tmp_social_value:
+                        if tmp_seats <= seats:
+                            sec_social_value = tmp_social_value
+                            sec_mu = mu
+            monetary_transfer = -(max_social_value - allo[3] - sec_social_value)
+            true_value = p1.loc[allo[1], allo[2]]
+            utility_random = true_value - monetary_transfer
+    print("best_mu：" + str(best_mu))
+    print("max_social_value：" + str(max_social_value))
+    print("sec_mu：" + str(sec_mu))
+    print("sec_social_value：" + str(sec_social_value))
+    print("utility for palyer 1: " + str(utility_random))
+    print("---------------------truth-telling----------------------")
+    max_outcome = 0
+    max_social_value = 0
+    sec_social_value = 0
+    best_mu = 0
+    sec_mu = 0
+    utility_truth = 0
+    for k in range(1, seats):
+        mus = list(itertools.combinations(truth_table, k))
+        for mu in mus:
+            player_list = []
+            for bid in mu:
+                player_list.append(bid[0])
+            if len(set(player_list)) != len(player_list):
+                mus.remove(mu)
+        for mu in mus:
+            tmp_social_value = 0
+            tmp_seats = 0
+            for bid in mu:
+                tmp_social_value = tmp_social_value + bid[3]
+                tmp_seats = tmp_seats + bid[1]
+            if max_social_value < tmp_social_value:
+                if tmp_seats <= seats:
+                    max_social_value = tmp_social_value
+                    best_mu = mu
+    for allo in best_mu:
+        if allo[0] == 1:
+            for j in truth_table:
+                if j[0] == 1:
+                    truth_table.remove(j)
+            for k in range(1, seats):
+                mus = list(itertools.combinations(truth_table, k))
+                for mu in mus:
+                    player_list = []
+                    for bid in mu:
+                        player_list.append(bid[0])
+                    if len(set(player_list)) != len(player_list):
+                        mus.remove(mu)
+                for mu in mus:
+                    tmp_social_value = 0
+                    tmp_seats = 0
+                    for bid in mu:
+                        tmp_social_value = tmp_social_value + bid[3]
+                        tmp_seats = tmp_seats + bid[1]
+                    if sec_social_value < tmp_social_value:
+                        if tmp_seats <= seats:
+                            sec_social_value = tmp_social_value
+                            sec_mu = mu
+            monetary_transfer = -(max_social_value - allo[3] - sec_social_value)
+            true_value = p1.loc[allo[1], allo[2]]
+            utility_truth = true_value - monetary_transfer
+    print("best_mu：" + str(best_mu))
+    print("max_social_value：" + str(max_social_value))
+    print("sec_mu：" + str(sec_mu))
+    print("sec_social_value：" + str(sec_social_value))
+    print("utility for palyer 1: " + str(utility_truth))
+
+    utility_change = utility_change + (utility_truth - utility_random)
+    if utility_random > utility_truth:
+        bug = bug + 1
+
+print("bug =", bug)
+
+utility_change = utility_change / 10000
+print("average utility changed:", utility_change)
+"""
+bug = 40
+average utility changed: 2.513
+"""
+'''
+
+import pandas as pd
+import random
+
+# table = 5, course = 3, consumer = 30
+
+
+def getIndexes(p, p_report):
+    """ Get index positions of value in dataframe."""
+    listOfPos = list()
+    # Get bool dataframe with True at positions where the given value exists
+    result = p.isin([p_report])
+    # Get list of columns that contains the value
+    seriesObj = result.any()
+    columnNames = list(seriesObj[seriesObj == True].index)
+    # Iterate over list of columns and fetch the rows indexes where value exists
+    for col in columnNames:
+        rows = list(result[col][result[col] == True].index)
+        for row in rows:
+            listOfPos.append([row, col, p_report])
+    # Return a list of tuples indicating the positions of value in the dataframe
+    return listOfPos
+
+
+utility_change_1 = 0
+bug = 0  # initialize the number of situations when truth-telling strategy is not dominant strategy
+for z in range(10000):
+    consumer = 30
+    report_table = []
+    random_table = []
+    for i in range(consumer):
+        pi = pd.DataFrame(
+            [
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+            ],
+            columns=["A", "B", "C"],
+            index=[1, 2, 3, 4, 5],
+        )
+        pi_random = pd.DataFrame(
+            [
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+                [random.randint(0, 20), random.randint(0, 20), random.randint(0, 20)],
+            ],
+            columns=["A", "B", "C"],
+            index=[1, 2, 3, 4, 5],
+        )
+
+        if i == 0:
+            p1_report = []
+            p1 = pi
+            pi_A = pi.sort_values("A", ascending=False)
+            pi_A = pi_A["A"]
+            pi_A_list = pi_A.tolist()
+            pi_B = pi.sort_values("B", ascending=False)
+            pi_B = pi_B["B"]
+            pi_B_list = pi_B.tolist()
+            pi_C = pi.sort_values("C", ascending=False)
+            pi_C = pi_C["C"]
+            pi_C_list = pi_C.tolist()
+            pi_value_list = pi_A_list + pi_B_list + pi_C_list
+            pi_value_list.sort(reverse=True)
+            # one reported situation
+            pi_value = pi_value_list[0]
+            pi_report = [i + 1,] + getIndexes(pi, pi_value)[0]
+            p1_report = pi_report
+
+        pi_random_A = pi_random.sort_values("A", ascending=False)
+        pi_random_A = pi_random_A["A"]
+        pi_random_A_list = pi_random_A.tolist()
+        pi_random_B = pi_random.sort_values("B", ascending=False)
+        pi_random_B = pi_random_B["B"]
+        pi_random_B_list = pi_random_B.tolist()
+        pi_random_C = pi_random.sort_values("C", ascending=False)
+        pi_random_C = pi_random_C["C"]
+        pi_random_C_list = pi_random_C.tolist()
+        pi_random_value_list = pi_random_A_list + pi_random_B_list + pi_random_C_list
+        pi_random_value_list.sort(reverse=True)
+        # one randomly reported situation
+        pi_random_value = pi_random_value_list[0]
+        pi_random_report = [i + 1,] + getIndexes(pi_random, pi_random_value)[0]
+        random_table = random_table + [pi_random_report]
+    # classify tables with table numbers
+    report_table = [i for i in random_table if i[0] != 1]
+    report_table.append(p1_report)
+    report_table_1 = []
+    report_table_2 = []
+    report_table_3 = []
+    report_table_4 = []
+    report_table_5 = []
+    for i in range(len(report_table)):
+        if report_table[i][1] == 1:
+            report_table_1.append(report_table[i])
+        elif report_table[i][1] == 2:
+            report_table_2.append(report_table[i])
+        elif report_table[i][1] == 3:
+            report_table_3.append(report_table[i])
+        elif report_table[i][1] == 4:
+            report_table_4.append(report_table[i])
+        elif report_table[i][1] == 5:
+            report_table_5.append(report_table[i])
+
+    # fill the blank list
+    while len(report_table_1) < 20:
+        report_table_1.append([0, 1, 0, 0])
+    while len(report_table_2) < 10:
+        report_table_2.append([0, 2, 0, 0])
+    while len(report_table_3) < 10:
+        report_table_3.append([0, 3, 0, 0])
+    while len(report_table_4) < 10:
+        report_table_4.append([0, 4, 0, 0])
+    while len(report_table_5) < 10:
+        report_table_5.append([0, 5, 0, 0])
+
+    def takeValue(elem):
+        return elem[3]
+
+    report_table_1.sort(key=takeValue, reverse=True)
+    report_table_2.sort(key=takeValue, reverse=True)
+    report_table_3.sort(key=takeValue, reverse=True)
+    report_table_4.sort(key=takeValue, reverse=True)
+    report_table_5.sort(key=takeValue, reverse=True)
+
+    report_table_list = [
+        report_table_1,
+        report_table_2,
+        report_table_3,
+        report_table_4,
+        report_table_5,
+    ]
+
+    # outcome for 1*4
+    value_1 = 0
+    outcome1_list = [
+        report_table_1[0],
+        report_table_1[1],
+        report_table_1[2],
+        report_table_1[3],
+    ]
+    player_list_1 = []
+    for i in outcome1_list:
+        if i[0] != 0:
+            player_list_1.append(i[0])
+    report_table_1_changed = report_table_1[4:]
+    for i in report_table_1_changed:
+        if i[0] in player_list_1:
+            report_table_1_changed.remove(i)
+    for i in range(len(outcome1_list)):
+        for j in range(1, (len(outcome1_list) - i)):
+            if outcome1_list[i][0] == outcome1_list[i + j][0] != 0:
+                outcome1_list[i + j] = report_table_1_changed[0]
+                report_table_1_changed.remove(report_table_1_changed[0])
+    for i in outcome1_list:
+        value_1 = value_1 + i[3]
+
+    # outcome for 2*2+1
+    value_2 = 0
+    outcome2_list = [
+        report_table_2[0],
+        report_table_2[1],
+        report_table_1[0],
+    ]
+    player_list_2 = []
+    for i in outcome2_list:
+        if i[0] != 0:
+            player_list_2.append(i[0])
+    report_table_2_changed_1 = report_table_1[1:]
+    report_table_2_changed_2 = report_table_2[2:]
+    for i in report_table_2_changed_1:
+        if i[0] in player_list_2:
+            report_table_2_changed_1.remove(i)
+    for i in report_table_2_changed_2:
+        if i[0] in player_list_2:
+            report_table_2_changed_2.remove(i)
+    for i in range(len(outcome2_list)):
+        for j in range(1, (len(outcome2_list) - i)):
+            if outcome2_list[i][0] == outcome2_list[i + j][0] != 0:
+                if outcome2_list[i + j][1] == 1:
+                    outcome2_list[i + j] = report_table_2_changed_1[0]
+                    report_table_2_changed_1.remove(report_table_2_changed_1[0])
+                elif outcome2_list[i + j][1] == 2:
+                    outcome2_list[i + j] = report_table_2_changed_2[0]
+                    report_table_2_changed_2.remove(report_table_2_changed_2[0])
+    for i in outcome2_list:
+        value_2 = value_2 + i[3]
+
+    # outcome for 2+1*3
+    value_3 = 0
+    outcome3_list = [
+        report_table_2[0],
+        report_table_1[0],
+        report_table_1[1],
+        report_table_1[2],
+    ]
+    player_list_3 = []
+    for i in outcome3_list:
+        if i[0] != 0:
+            player_list_3.append(i[0])
+    report_table_3_changed_1 = report_table_1[3:]
+    report_table_3_changed_2 = report_table_2[1:]
+    for i in report_table_3_changed_1:
+        if i[0] in player_list_3:
+            report_table_3_changed_1.remove(i)
+    for i in report_table_3_changed_2:
+        if i[0] in player_list_3:
+            report_table_3_changed_2.remove(i)
+    for i in range(len(outcome3_list)):
+        for j in range(1, (len(outcome3_list) - i)):
+            if outcome3_list[i][0] == outcome3_list[i + j][0] != 0:
+                if outcome3_list[i + j][1] == 1:
+                    outcome3_list[i + j] = report_table_3_changed_1[0]
+                    report_table_3_changed_1.remove(report_table_3_changed_1[0])
+                elif outcome3_list[i + j][1] == 2:
+                    outcome3_list[i + j] = report_table_3_changed_2[0]
+                    report_table_3_changed_2.remove(report_table_3_changed_2[0])
+    for i in outcome3_list:
+        value_3 = value_3 + i[3]
+
+    # outcome for 3+2
+    value_4 = 0
+    outcome4_list = [
+        report_table_3[0],
+        report_table_2[0],
+    ]
+    player_list_4 = []
+    for i in outcome4_list:
+        if i[0] != 0:
+            player_list_4.append(i[0])
+    report_table_4_changed_2 = report_table_2[1:]
+    report_table_4_changed_3 = report_table_3[1:]
+    for i in report_table_4_changed_2:
+        if i[0] in player_list_4:
+            report_table_4_changed_2.remove(i)
+    for i in report_table_4_changed_3:
+        if i[0] in player_list_4:
+            report_table_4_changed_3.remove(i)
+    for i in range(len(outcome4_list)):
+        for j in range(1, (len(outcome4_list) - i)):
+            if outcome4_list[i][0] == outcome4_list[i + j][0] != 0:
+                if outcome4_list[i + j][1] == 2:
+                    outcome4_list[i + j] = report_table_4_changed_2[0]
+                    report_table_4_changed_2.remove(report_table_4_changed_2[0])
+                elif outcome4_list[i + j][1] == 3:
+                    outcome4_list[i + j] = report_table_4_changed_3[0]
+                    report_table_4_changed_3.remove(report_table_4_changed_3[0])
+    for i in outcome4_list:
+        value_4 = value_4 + i[3]
+
+    # outcome for 3+1+1
+    value_5 = 0
+    outcome5_list = [
+        report_table_3[0],
+        report_table_1[0],
+        report_table_1[1],
+    ]
+    player_list_5 = []
+    for i in outcome5_list:
+        if i[0] != 0:
+            player_list_5.append(i[0])
+    report_table_5_changed_1 = report_table_1[2:]
+    report_table_5_changed_3 = report_table_3[1:]
+    for i in report_table_5_changed_1:
+        if i[0] in player_list_5:
+            report_table_5_changed_1.remove(i)
+    for i in report_table_5_changed_3:
+        if i[0] in player_list_5:
+            report_table_5_changed_3.remove(i)
+    for i in range(len(outcome5_list)):
+        for j in range(1, (len(outcome5_list) - i)):
+            if outcome5_list[i][0] == outcome5_list[i + j][0] != 0:
+                if outcome5_list[i + j][1] == 1:
+                    outcome5_list[i + j] = report_table_5_changed_1[0]
+                    report_table_5_changed_1.remove(report_table_5_changed_1[0])
+                elif outcome5_list[i + j][1] == 3:
+                    outcome5_list[i + j] = report_table_5_changed_3[0]
+                    report_table_5_changed_3.remove(report_table_5_changed_3[0])
+    for i in outcome5_list:
+        value_5 = value_5 + i[3]
+
+    # outcome for 4+1
+    value_6 = 0
+    outcome6_list = [
+        report_table_4[0],
+        report_table_1[0],
+    ]
+    player_list_6 = []
+    for i in outcome6_list:
+        if i[0] != 0:
+            player_list_6.append(i[0])
+    report_table_6_changed_1 = report_table_1[1:]
+    report_table_6_changed_4 = report_table_4[1:]
+    for i in report_table_6_changed_1:
+        if i[0] in player_list_6:
+            report_table_6_changed_1.remove(i)
+    for i in report_table_6_changed_4:
+        if i[0] in player_list_6:
+            report_table_6_changed_4.remove(i)
+    for i in range(len(outcome6_list)):
+        for j in range(1, (len(outcome6_list) - i)):
+            if outcome6_list[i][0] == outcome6_list[i + j][0] != 0:
+                if outcome6_list[i + j][1] == 1:
+                    outcome6_list[i + j] = report_table_6_changed_1[0]
+                    report_table_6_changed_1.remove(report_table_6_changed_1[0])
+                elif outcome6_list[i + j][1] == 4:
+                    outcome6_list[i + j] = report_table_6_changed_4[0]
+                    report_table_6_changed_4.remove(report_table_6_changed_4[0])
+    for i in outcome6_list:
+        value_6 = value_6 + i[3]
+
+    # outcome for 5
+    value_7 = 0
+    outcome7_list = [report_table_5[0]]
+    for i in outcome7_list:
+        value_7 = value_7 + i[3]
+
+    outcomes_list = [
+        outcome1_list,
+        outcome2_list,
+        outcome3_list,
+        outcome4_list,
+        outcome5_list,
+        outcome6_list,
+        outcome7_list,
+    ]
+    values = [
+        value_1,
+        value_2,
+        value_3,
+        value_4,
+        value_5,
+        value_6,
+        value_7,
+    ]
+    utility_truth_1 = (
+        0  # initialize the utility of player one under truth-telling strategy
+    )
+
+    # find the optimal outcome
+    for a in range(len(values)):
+        value_a = values[a]
+        if value_a == max(values):
+            social_value = value_a
+            res_revenue = 0
+            for m in range(len(outcomes_list)):
+                outcome_m = outcomes_list[m]
+                if m == a:
+                    for p in outcome_m:
+                        if p[0] == 1:
+                            print(
+                                z,
+                                "---truth---" "allocate",
+                                "table",
+                                p[1],
+                                " and course",
+                                p[2],
+                                "to player",
+                                p[0],
+                            )
+
+                            # calcluate second price
+                            sereport_table_1 = [k for k in report_table_1 if k[0] != 1]
+                            sereport_table_2 = [k for k in report_table_2 if k[0] != 1]
+                            sereport_table_3 = [k for k in report_table_3 if k[0] != 1]
+                            sereport_table_4 = [k for k in report_table_4 if k[0] != 1]
+                            sereport_table_5 = [k for k in report_table_5 if k[0] != 1]
+
+                            # outcome for 1*4
+                            sevalue_1 = 0
+                            seoutcome1_list = [
+                                sereport_table_1[0],
+                                sereport_table_1[1],
+                                sereport_table_1[2],
+                                sereport_table_1[3],
+                            ]
+                            seplayer_list_1 = []
+                            for i in seoutcome1_list:
+                                if i[0] != 0:
+                                    seplayer_list_1.append(i[0])
+                            sereport_table_1_changed = sereport_table_1[4:]
+                            for i in sereport_table_1_changed:
+                                if i[0] in seplayer_list_1:
+                                    sereport_table_1_changed.remove(i)
+                            for i in range(len(seoutcome1_list)):
+                                for j in range(1, (len(seoutcome1_list) - i)):
+                                    if (
+                                        seoutcome1_list[i][0]
+                                        == seoutcome1_list[i + j][0]
+                                        != 0
+                                    ):
+                                        seoutcome1_list[
+                                            i + j
+                                        ] = sereport_table_1_changed[0]
+                                        sereport_table_1_changed.remove(
+                                            sereport_table_1_changed[0]
+                                        )
+                            for i in seoutcome1_list:
+                                sevalue_1 = sevalue_1 + i[3]
+
+                            # outcome for 2*2+1
+                            sevalue_2 = 0
+                            seoutcome2_list = [
+                                sereport_table_2[0],
+                                sereport_table_2[1],
+                                sereport_table_1[0],
+                            ]
+                            seplayer_list_2 = []
+                            for i in seoutcome2_list:
+                                if i[0] != 0:
+                                    seplayer_list_2.append(i[0])
+                            sereport_table_2_changed_1 = sereport_table_1[1:]
+                            sereport_table_2_changed_2 = sereport_table_2[2:]
+                            for i in sereport_table_2_changed_1:
+                                if i[0] in seplayer_list_2:
+                                    sereport_table_2_changed_1.remove(i)
+                            for i in sereport_table_2_changed_2:
+                                if i[0] in seplayer_list_2:
+                                    sereport_table_2_changed_2.remove(i)
+                            for i in range(len(seoutcome2_list)):
+                                for j in range(1, (len(seoutcome2_list) - i)):
+                                    if (
+                                        seoutcome2_list[i][0]
+                                        == seoutcome2_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome2_list[i + j][1] == 1:
+                                            seoutcome2_list[
+                                                i + j
+                                            ] = sereport_table_2_changed_1[0]
+                                            sereport_table_2_changed_1.remove(
+                                                sereport_table_2_changed_1[0]
+                                            )
+                                        elif seoutcome2_list[i + j][1] == 2:
+                                            seoutcome2_list[
+                                                i + j
+                                            ] = sereport_table_2_changed_2[0]
+                                            sereport_table_2_changed_2.remove(
+                                                sereport_table_2_changed_2[0]
+                                            )
+                            for i in seoutcome2_list:
+                                sevalue_2 = sevalue_2 + i[3]
+
+                            # outcome for 2+1*3
+                            sevalue_3 = 0
+                            seoutcome3_list = [
+                                sereport_table_2[0],
+                                sereport_table_1[0],
+                                sereport_table_1[1],
+                                sereport_table_1[2],
+                            ]
+                            seplayer_list_3 = []
+                            for i in seoutcome3_list:
+                                if i[0] != 0:
+                                    seplayer_list_3.append(i[0])
+                            sereport_table_3_changed_1 = sereport_table_1[3:]
+                            sereport_table_3_changed_2 = sereport_table_2[1:]
+                            for i in sereport_table_3_changed_1:
+                                if i[0] in seplayer_list_3:
+                                    sereport_table_3_changed_1.remove(i)
+                            for i in sereport_table_3_changed_2:
+                                if i[0] in seplayer_list_3:
+                                    sereport_table_3_changed_2.remove(i)
+                            for i in range(len(seoutcome3_list)):
+                                for j in range(1, (len(seoutcome3_list) - i)):
+                                    if (
+                                        seoutcome3_list[i][0]
+                                        == seoutcome3_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome3_list[i + j][1] == 1:
+                                            seoutcome3_list[
+                                                i + j
+                                            ] = sereport_table_3_changed_1[0]
+                                            sereport_table_3_changed_1.remove(
+                                                sereport_table_3_changed_1[0]
+                                            )
+                                        elif seoutcome3_list[i + j][1] == 2:
+                                            seoutcome3_list[
+                                                i + j
+                                            ] = sereport_table_3_changed_2[0]
+                                            sereport_table_3_changed_2.remove(
+                                                sereport_table_3_changed_2[0]
+                                            )
+                            for i in seoutcome3_list:
+                                sevalue_3 = sevalue_3 + i[3]
+
+                            # outcome for 3+2
+                            sevalue_4 = 0
+                            seoutcome4_list = [
+                                sereport_table_3[0],
+                                sereport_table_2[0],
+                            ]
+                            seplayer_list_4 = []
+                            for i in seoutcome4_list:
+                                if i[0] != 0:
+                                    seplayer_list_4.append(i[0])
+                            sereport_table_4_changed_2 = sereport_table_2[1:]
+                            sereport_table_4_changed_3 = sereport_table_3[1:]
+                            for i in sereport_table_4_changed_2:
+                                if i[0] in seplayer_list_4:
+                                    sereport_table_4_changed_2.remove(i)
+                            for i in sereport_table_4_changed_3:
+                                if i[0] in seplayer_list_4:
+                                    sereport_table_4_changed_3.remove(i)
+                            for i in range(len(seoutcome4_list)):
+                                for j in range(1, (len(seoutcome4_list) - i)):
+                                    if (
+                                        seoutcome4_list[i][0]
+                                        == seoutcome4_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome4_list[i + j][1] == 2:
+                                            seoutcome4_list[
+                                                i + j
+                                            ] = sereport_table_4_changed_2[0]
+                                            sereport_table_4_changed_2.remove(
+                                                sereport_table_4_changed_2[0]
+                                            )
+                                        elif seoutcome4_list[i + j][1] == 3:
+                                            seoutcome4_list[
+                                                i + j
+                                            ] = sereport_table_4_changed_3[0]
+                                            sereport_table_4_changed_3.remove(
+                                                sereport_table_4_changed_3[0]
+                                            )
+                            for i in seoutcome4_list:
+                                sevalue_4 = sevalue_4 + i[3]
+
+                            # outcome for 3+1+1
+                            sevalue_5 = 0
+                            seoutcome5_list = [
+                                sereport_table_3[0],
+                                sereport_table_1[0],
+                                sereport_table_1[1],
+                            ]
+                            seplayer_list_5 = []
+                            for i in seoutcome5_list:
+                                if i[0] != 0:
+                                    seplayer_list_5.append(i[0])
+                            sereport_table_5_changed_1 = sereport_table_1[2:]
+                            sereport_table_5_changed_3 = sereport_table_3[1:]
+                            for i in sereport_table_5_changed_1:
+                                if i[0] in seplayer_list_5:
+                                    sereport_table_5_changed_1.remove(i)
+                            for i in sereport_table_5_changed_3:
+                                if i[0] in seplayer_list_5:
+                                    sereport_table_5_changed_3.remove(i)
+                            for i in range(len(seoutcome5_list)):
+                                for j in range(1, (len(seoutcome5_list) - i)):
+                                    if (
+                                        seoutcome5_list[i][0]
+                                        == seoutcome5_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome5_list[i + j][1] == 1:
+                                            seoutcome5_list[
+                                                i + j
+                                            ] = sereport_table_5_changed_1[0]
+                                            sereport_table_5_changed_1.remove(
+                                                sereport_table_5_changed_1[0]
+                                            )
+                                        elif seoutcome5_list[i + j][1] == 3:
+                                            seoutcome5_list[
+                                                i + j
+                                            ] = sereport_table_5_changed_3[0]
+                                            sereport_table_5_changed_3.remove(
+                                                sereport_table_5_changed_3[0]
+                                            )
+                            for i in seoutcome5_list:
+                                sevalue_5 = sevalue_5 + i[3]
+
+                            # outcome for 4+1
+                            sevalue_6 = 0
+                            seoutcome6_list = [
+                                sereport_table_4[0],
+                                sereport_table_1[0],
+                            ]
+                            seplayer_list_6 = []
+                            for i in seoutcome6_list:
+                                if i[0] != 0:
+                                    seplayer_list_6.append(i[0])
+                            sereport_table_6_changed_1 = sereport_table_1[1:]
+                            sereport_table_6_changed_4 = sereport_table_4[1:]
+                            for i in sereport_table_6_changed_1:
+                                if i[0] in seplayer_list_6:
+                                    sereport_table_6_changed_1.remove(i)
+                            for i in sereport_table_6_changed_4:
+                                if i[0] in seplayer_list_6:
+                                    sereport_table_6_changed_4.remove(i)
+                            for i in range(len(seoutcome6_list)):
+                                for j in range(1, (len(seoutcome6_list) - i)):
+                                    if (
+                                        seoutcome6_list[i][0]
+                                        == seoutcome6_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome6_list[i + j][1] == 1:
+                                            seoutcome6_list[
+                                                i + j
+                                            ] = sereport_table_6_changed_1[0]
+                                            sereport_table_6_changed_1.remove(
+                                                sereport_table_6_changed_1[0]
+                                            )
+                                        elif seoutcome6_list[i + j][1] == 4:
+                                            seoutcome6_list[
+                                                i + j
+                                            ] = sereport_table_6_changed_4[0]
+                                            sereport_table_6_changed_4.remove(
+                                                sereport_table_6_changed_4[0]
+                                            )
+                            for i in seoutcome6_list:
+                                sevalue_6 = sevalue_6 + i[3]
+
+                            # outcome for 5
+                            sevalue_7 = 0
+                            seoutcome7_list = [sereport_table_5[0]]
+                            for i in seoutcome7_list:
+                                sevalue_7 = sevalue_7 + i[3]
+                            sevalues = [
+                                sevalue_1,
+                                sevalue_2,
+                                sevalue_3,
+                                sevalue_4,
+                                sevalue_5,
+                                sevalue_6,
+                                sevalue_7,
+                            ]
+                            for n in sevalues:
+                                if n == max(sevalues):
+                                    second_value = n
+                                    monetary_transfer = -(
+                                        social_value - p[3] - second_value
+                                    )
+                                    res_revenue = res_revenue + monetary_transfer
+                                    utility_truth_1 = p[3] - monetary_transfer
+                                    print("utility for", p[0], ":", utility_truth_1)
+                                    break
+                                else:
+                                    pass
+            break
+        else:
+            pass
+
+    # if player one random-telling, others random-telling
+    random_table_1 = []
+    random_table_2 = []
+    random_table_3 = []
+    random_table_4 = []
+    random_table_5 = []
+    random_table_list = [
+        random_table_1,
+        random_table_2,
+        random_table_3,
+        random_table_4,
+        random_table_5,
+    ]
+    for i in range(len(random_table)):
+        if random_table[i][1] == 1:
+            random_table_1.append(random_table[i])
+        elif random_table[i][1] == 2:
+            random_table_2.append(random_table[i])
+        elif random_table[i][1] == 3:
+            random_table_3.append(random_table[i])
+        elif random_table[i][1] == 4:
+            random_table_4.append(random_table[i])
+        elif random_table[i][1] == 5:
+            random_table_5.append(random_table[i])
+    # fill the blank list
+    while len(random_table_1) < 20:
+        random_table_1.append([0, 1, 0, 0])
+    while len(random_table_2) < 10:
+        random_table_2.append([0, 2, 0, 0])
+    while len(random_table_3) < 10:
+        random_table_3.append([0, 3, 0, 0])
+    while len(random_table_4) < 10:
+        random_table_4.append([0, 4, 0, 0])
+    while len(random_table_5) < 10:
+        random_table_5.append([0, 5, 0, 0])
+
+    random_table_1.sort(key=takeValue, reverse=True)
+    random_table_2.sort(key=takeValue, reverse=True)
+    random_table_3.sort(key=takeValue, reverse=True)
+    random_table_4.sort(key=takeValue, reverse=True)
+    random_table_5.sort(key=takeValue, reverse=True)
+    # outcome for 1*4
+    random_value_1 = 0
+    random_outcome1_list = [
+        random_table_1[0],
+        random_table_1[1],
+        random_table_1[2],
+        random_table_1[3],
+    ]
+    random_player_list_1 = []
+    for i in random_outcome1_list:
+        if i[0] != 0:
+            random_player_list_1.append(i[0])
+    random_table_1_changed = random_table_1[4:]
+    for i in random_table_1_changed:
+        if i[0] in random_player_list_1:
+            random_table_1_changed.remove(i)
+    for i in range(len(random_outcome1_list)):
+        for j in range(1, (len(random_outcome1_list) - i)):
+            if random_outcome1_list[i][0] == random_outcome1_list[i + j][0] != 0:
+                random_outcome1_list[i + j] = random_table_1_changed[0]
+                random_table_1_changed.remove(random_table_1_changed[0])
+    for i in random_outcome1_list:
+        random_value_1 = random_value_1 + i[3]
+
+    # outcome for 2*2+1
+    random_value_2 = 0
+    random_outcome2_list = [
+        random_table_2[0],
+        random_table_2[1],
+        random_table_1[0],
+    ]
+    random_player_list_2 = []
+    for i in random_outcome2_list:
+        if i[0] != 0:
+            random_player_list_2.append(i[0])
+    random_table_2_changed_1 = random_table_1[1:]
+    random_table_2_changed_2 = random_table_2[2:]
+    for i in random_table_2_changed_1:
+        if i[0] in random_player_list_2:
+            random_table_2_changed_1.remove(i)
+    for i in random_table_2_changed_2:
+        if i[0] in random_player_list_2:
+            random_table_2_changed_2.remove(i)
+    for i in range(len(random_outcome2_list)):
+        for j in range(1, (len(random_outcome2_list) - i)):
+            if random_outcome2_list[i][0] == random_outcome2_list[i + j][0] != 0:
+                if random_outcome2_list[i + j][1] == 1:
+                    random_outcome2_list[i + j] = random_table_2_changed_1[0]
+                    random_table_2_changed_1.remove(random_table_2_changed_1[0])
+                elif random_outcome2_list[i + j][1] == 2:
+                    random_outcome2_list[i + j] = random_table_2_changed_2[0]
+                    random_table_2_changed_2.remove(random_table_2_changed_2[0])
+    for i in random_outcome2_list:
+        random_value_2 = random_value_2 + i[3]
+
+    # outcome for 2+1*3
+    random_value_3 = 0
+    random_outcome3_list = [
+        random_table_2[0],
+        random_table_1[0],
+        random_table_1[1],
+        random_table_1[2],
+    ]
+    random_player_list_3 = []
+    for i in random_outcome3_list:
+        if i[0] != 0:
+            random_player_list_3.append(i[0])
+    random_table_3_changed_1 = random_table_1[3:]
+    random_table_3_changed_2 = random_table_2[1:]
+    for i in random_table_3_changed_1:
+        if i[0] in random_player_list_3:
+            random_table_3_changed_1.remove(i)
+    for i in random_table_3_changed_2:
+        if i[0] in random_player_list_3:
+            random_table_3_changed_2.remove(i)
+    for i in range(len(random_outcome3_list)):
+        for j in range(1, (len(random_outcome3_list) - i)):
+            if random_outcome3_list[i][0] == random_outcome3_list[i + j][0] != 0:
+                if random_outcome3_list[i + j][1] == 1:
+                    random_outcome3_list[i + j] = random_table_3_changed_1[0]
+                    random_table_3_changed_1.remove(random_table_3_changed_1[0])
+                elif random_outcome3_list[i + j][1] == 2:
+                    random_outcome3_list[i + j] = random_table_3_changed_2[0]
+                    random_table_3_changed_2.remove(random_table_3_changed_2[0])
+    for i in random_outcome3_list:
+        random_value_3 = random_value_3 + i[3]
+
+    # outcome for 3+2
+    random_value_4 = 0
+    random_outcome4_list = [
+        random_table_3[0],
+        random_table_2[0],
+    ]
+    random_player_list_4 = []
+    for i in random_outcome4_list:
+        if i[0] != 0:
+            random_player_list_4.append(i[0])
+    random_table_4_changed_2 = random_table_2[1:]
+    random_table_4_changed_3 = random_table_3[1:]
+    for i in random_table_4_changed_2:
+        if i[0] in random_player_list_4:
+            random_table_4_changed_2.remove(i)
+    for i in random_table_4_changed_3:
+        if i[0] in random_player_list_4:
+            random_table_4_changed_3.remove(i)
+    for i in range(len(random_outcome4_list)):
+        for j in range(1, (len(random_outcome4_list) - i)):
+            if random_outcome4_list[i][0] == random_outcome4_list[i + j][0] != 0:
+                if random_outcome4_list[i + j][1] == 2:
+                    random_outcome4_list[i + j] = random_table_4_changed_2[0]
+                    random_table_4_changed_2.remove(random_table_4_changed_2[0])
+                elif random_outcome4_list[i + j][1] == 3:
+                    random_outcome4_list[i + j] = random_table_4_changed_3[0]
+                    random_table_4_changed_3.remove(random_table_4_changed_3[0])
+    for i in random_outcome4_list:
+        random_value_4 = random_value_4 + i[3]
+
+    # outcome for 3+1+1
+    random_value_5 = 0
+    random_outcome5_list = [
+        random_table_3[0],
+        random_table_1[0],
+        random_table_1[1],
+    ]
+    random_player_list_5 = []
+    for i in random_outcome5_list:
+        if i[0] != 0:
+            random_player_list_5.append(i[0])
+    random_table_5_changed_1 = random_table_1[2:]
+    random_table_5_changed_3 = random_table_3[1:]
+    for i in random_table_5_changed_1:
+        if i[0] in random_player_list_5:
+            random_table_5_changed_1.remove(i)
+    for i in random_table_5_changed_3:
+        if i[0] in random_player_list_5:
+            random_table_5_changed_3.remove(i)
+    for i in range(len(random_outcome5_list)):
+        for j in range(1, (len(random_outcome5_list) - i)):
+            if random_outcome5_list[i][0] == random_outcome5_list[i + j][0] != 0:
+                if random_outcome5_list[i + j][1] == 1:
+                    random_outcome5_list[i + j] = random_table_5_changed_1[0]
+                    random_table_5_changed_1.remove(random_table_5_changed_1[0])
+                elif random_outcome5_list[i + j][1] == 3:
+                    random_outcome5_list[i + j] = random_table_5_changed_3[0]
+                    random_table_5_changed_3.remove(random_table_5_changed_3[0])
+    for i in random_outcome5_list:
+        random_value_5 = random_value_5 + i[3]
+
+    # outcome for 4+1
+    random_value_6 = 0
+    random_outcome6_list = [
+        random_table_4[0],
+        random_table_1[0],
+    ]
+    random_player_list_6 = []
+    for i in random_outcome6_list:
+        if i[0] != 0:
+            random_player_list_6.append(i[0])
+    random_table_6_changed_1 = random_table_1[1:]
+    random_table_6_changed_4 = random_table_4[1:]
+    for i in random_table_6_changed_1:
+        if i[0] in random_player_list_6:
+            random_table_6_changed_1.remove(i)
+    for i in random_table_6_changed_4:
+        if i[0] in random_player_list_6:
+            random_table_6_changed_4.remove(i)
+    for i in range(len(random_outcome6_list)):
+        for j in range(1, (len(random_outcome6_list) - i)):
+            if random_outcome6_list[i][0] == random_outcome6_list[i + j][0] != 0:
+                if random_outcome6_list[i + j][1] == 1:
+                    random_outcome6_list[i + j] = random_table_6_changed_1[0]
+                    random_table_6_changed_1.remove(random_table_6_changed_1[0])
+                elif random_outcome6_list[i + j][1] == 4:
+                    random_outcome6_list[i + j] = random_table_6_changed_4[0]
+                    random_table_6_changed_4.remove(random_table_6_changed_4[0])
+    for i in random_outcome6_list:
+        random_value_6 = random_value_6 + i[3]
+
+    # outcome for 5
+    random_value_7 = 0
+    random_outcome7_list = [random_table_5[0]]
+    for i in random_outcome7_list:
+        random_value_7 = random_value_7 + i[3]
+    random_outcomes_list = [
+        random_outcome1_list,
+        random_outcome2_list,
+        random_outcome3_list,
+        random_outcome4_list,
+        random_outcome5_list,
+        random_outcome6_list,
+        random_outcome7_list,
+    ]
+    random_values = [
+        random_value_1,
+        random_value_2,
+        random_value_3,
+        random_value_4,
+        random_value_5,
+        random_value_6,
+        random_value_7,
+    ]
+    utility_random_1 = (
+        0  # initialize the utility of player one under random-telling strategy
+    )
+    # find the optimal outcome
+    for a in range(len(random_values)):
+        random_value_a = random_values[a]
+        if random_value_a == max(random_values):
+            social_value = random_value_a
+            res_revenue = 0
+            for m in range(len(random_outcomes_list)):
+                random_outcome_m = random_outcomes_list[m]
+                if m == a:
+                    for p in random_outcome_m:
+                        if p[0] == 1:
+                            print(z, "---random---")
+                            print(
+                                "allocate",
+                                "table",
+                                p[1],
+                                " and course",
+                                p[2],
+                                "to player",
+                                p[0],
+                            )
+
+                            # calcluate second price
+                            sereport_table_1 = [k for k in random_table_1 if k[0] != 1]
+                            sereport_table_2 = [k for k in random_table_2 if k[0] != 1]
+                            sereport_table_3 = [k for k in random_table_3 if k[0] != 1]
+                            sereport_table_4 = [k for k in random_table_4 if k[0] != 1]
+                            sereport_table_5 = [k for k in random_table_5 if k[0] != 1]
+
+                            # outcome for 1*4
+                            sevalue_1 = 0
+                            seoutcome1_list = [
+                                sereport_table_1[0],
+                                sereport_table_1[1],
+                                sereport_table_1[2],
+                                sereport_table_1[3],
+                            ]
+                            seplayer_list_1 = []
+                            for i in seoutcome1_list:
+                                if i[0] != 0:
+                                    seplayer_list_1.append(i[0])
+                            sereport_table_1_changed = sereport_table_1[4:]
+                            for i in sereport_table_1_changed:
+                                if i[0] in seplayer_list_1:
+                                    sereport_table_1_changed.remove(i)
+                            for i in range(len(seoutcome1_list)):
+                                for j in range(1, (len(seoutcome1_list) - i)):
+                                    if (
+                                        seoutcome1_list[i][0]
+                                        == seoutcome1_list[i + j][0]
+                                        != 0
+                                    ):
+                                        seoutcome1_list[
+                                            i + j
+                                        ] = sereport_table_1_changed[0]
+                                        sereport_table_1_changed.remove(
+                                            sereport_table_1_changed[0]
+                                        )
+                            for i in seoutcome1_list:
+                                sevalue_1 = sevalue_1 + i[3]
+
+                            # outcome for 2*2+1
+                            sevalue_2 = 0
+                            seoutcome2_list = [
+                                sereport_table_2[0],
+                                sereport_table_2[1],
+                                sereport_table_1[0],
+                            ]
+                            seplayer_list_2 = []
+                            for i in seoutcome2_list:
+                                if i[0] != 0:
+                                    seplayer_list_2.append(i[0])
+                            sereport_table_2_changed_1 = sereport_table_1[1:]
+                            sereport_table_2_changed_2 = sereport_table_2[2:]
+                            for i in sereport_table_2_changed_1:
+                                if i[0] in seplayer_list_2:
+                                    sereport_table_2_changed_1.remove(i)
+                            for i in sereport_table_2_changed_2:
+                                if i[0] in seplayer_list_2:
+                                    sereport_table_2_changed_2.remove(i)
+                            for i in range(len(seoutcome2_list)):
+                                for j in range(1, (len(seoutcome2_list) - i)):
+                                    if (
+                                        seoutcome2_list[i][0]
+                                        == seoutcome2_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome2_list[i + j][1] == 1:
+                                            seoutcome2_list[
+                                                i + j
+                                            ] = sereport_table_2_changed_1[0]
+                                            sereport_table_2_changed_1.remove(
+                                                sereport_table_2_changed_1[0]
+                                            )
+                                        elif seoutcome2_list[i + j][1] == 2:
+                                            seoutcome2_list[
+                                                i + j
+                                            ] = sereport_table_2_changed_2[0]
+                                            sereport_table_2_changed_2.remove(
+                                                sereport_table_2_changed_2[0]
+                                            )
+                            for i in seoutcome2_list:
+                                sevalue_2 = sevalue_2 + i[3]
+
+                            # outcome for 2+1*3
+                            sevalue_3 = 0
+                            seoutcome3_list = [
+                                sereport_table_2[0],
+                                sereport_table_1[0],
+                                sereport_table_1[1],
+                                sereport_table_1[2],
+                            ]
+                            seplayer_list_3 = []
+                            for i in seoutcome3_list:
+                                if i[0] != 0:
+                                    seplayer_list_3.append(i[0])
+                            sereport_table_3_changed_1 = sereport_table_1[3:]
+                            sereport_table_3_changed_2 = sereport_table_2[1:]
+                            for i in sereport_table_3_changed_1:
+                                if i[0] in seplayer_list_3:
+                                    sereport_table_3_changed_1.remove(i)
+                            for i in sereport_table_3_changed_2:
+                                if i[0] in seplayer_list_3:
+                                    sereport_table_3_changed_2.remove(i)
+                            for i in range(len(seoutcome3_list)):
+                                for j in range(1, (len(seoutcome3_list) - i)):
+                                    if (
+                                        seoutcome3_list[i][0]
+                                        == seoutcome3_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome3_list[i + j][1] == 1:
+                                            seoutcome3_list[
+                                                i + j
+                                            ] = sereport_table_3_changed_1[0]
+                                            sereport_table_3_changed_1.remove(
+                                                sereport_table_3_changed_1[0]
+                                            )
+                                        elif seoutcome3_list[i + j][1] == 2:
+                                            seoutcome3_list[
+                                                i + j
+                                            ] = sereport_table_3_changed_2[0]
+                                            sereport_table_3_changed_2.remove(
+                                                sereport_table_3_changed_2[0]
+                                            )
+                            for i in seoutcome3_list:
+                                sevalue_3 = sevalue_3 + i[3]
+
+                            # outcome for 3+2
+                            sevalue_4 = 0
+                            seoutcome4_list = [
+                                sereport_table_3[0],
+                                sereport_table_2[0],
+                            ]
+                            seplayer_list_4 = []
+                            for i in seoutcome4_list:
+                                if i[0] != 0:
+                                    seplayer_list_4.append(i[0])
+                            sereport_table_4_changed_2 = sereport_table_2[1:]
+                            sereport_table_4_changed_3 = sereport_table_3[1:]
+                            for i in sereport_table_4_changed_2:
+                                if i[0] in seplayer_list_4:
+                                    sereport_table_4_changed_2.remove(i)
+                            for i in sereport_table_4_changed_3:
+                                if i[0] in seplayer_list_4:
+                                    sereport_table_4_changed_3.remove(i)
+                            for i in range(len(seoutcome4_list)):
+                                for j in range(1, (len(seoutcome4_list) - i)):
+                                    if (
+                                        seoutcome4_list[i][0]
+                                        == seoutcome4_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome4_list[i + j][1] == 2:
+                                            seoutcome4_list[
+                                                i + j
+                                            ] = sereport_table_4_changed_2[0]
+                                            sereport_table_4_changed_2.remove(
+                                                sereport_table_4_changed_2[0]
+                                            )
+                                        elif seoutcome4_list[i + j][1] == 3:
+                                            seoutcome4_list[
+                                                i + j
+                                            ] = sereport_table_4_changed_3[0]
+                                            sereport_table_4_changed_3.remove(
+                                                sereport_table_4_changed_3[0]
+                                            )
+                            for i in seoutcome4_list:
+                                sevalue_4 = sevalue_4 + i[3]
+
+                            # outcome for 3+1+1
+                            sevalue_5 = 0
+                            seoutcome5_list = [
+                                sereport_table_3[0],
+                                sereport_table_1[0],
+                                sereport_table_1[1],
+                            ]
+                            seplayer_list_5 = []
+                            for i in seoutcome5_list:
+                                if i[0] != 0:
+                                    seplayer_list_5.append(i[0])
+                            sereport_table_5_changed_1 = sereport_table_1[2:]
+                            sereport_table_5_changed_3 = sereport_table_3[1:]
+                            for i in sereport_table_5_changed_1:
+                                if i[0] in seplayer_list_5:
+                                    sereport_table_5_changed_1.remove(i)
+                            for i in sereport_table_5_changed_3:
+                                if i[0] in seplayer_list_5:
+                                    sereport_table_5_changed_3.remove(i)
+                            for i in range(len(seoutcome5_list)):
+                                for j in range(1, (len(seoutcome5_list) - i)):
+                                    if (
+                                        seoutcome5_list[i][0]
+                                        == seoutcome5_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome5_list[i + j][1] == 1:
+                                            seoutcome5_list[
+                                                i + j
+                                            ] = sereport_table_5_changed_1[0]
+                                            sereport_table_5_changed_1.remove(
+                                                sereport_table_5_changed_1[0]
+                                            )
+                                        elif seoutcome5_list[i + j][1] == 3:
+                                            seoutcome5_list[
+                                                i + j
+                                            ] = sereport_table_5_changed_3[0]
+                                            sereport_table_5_changed_3.remove(
+                                                sereport_table_5_changed_3[0]
+                                            )
+                            for i in seoutcome5_list:
+                                sevalue_5 = sevalue_5 + i[3]
+
+                            # outcome for 4+1
+                            sevalue_6 = 0
+                            seoutcome6_list = [
+                                sereport_table_4[0],
+                                sereport_table_1[0],
+                            ]
+                            seplayer_list_6 = []
+                            for i in seoutcome6_list:
+                                if i[0] != 0:
+                                    seplayer_list_6.append(i[0])
+                            sereport_table_6_changed_1 = sereport_table_1[1:]
+                            sereport_table_6_changed_4 = sereport_table_4[1:]
+                            for i in sereport_table_6_changed_1:
+                                if i[0] in seplayer_list_6:
+                                    sereport_table_6_changed_1.remove(i)
+                            for i in sereport_table_6_changed_4:
+                                if i[0] in seplayer_list_6:
+                                    sereport_table_6_changed_4.remove(i)
+                            for i in range(len(seoutcome6_list)):
+                                for j in range(1, (len(seoutcome6_list) - i)):
+                                    if (
+                                        seoutcome6_list[i][0]
+                                        == seoutcome6_list[i + j][0]
+                                        != 0
+                                    ):
+                                        if seoutcome6_list[i + j][1] == 1:
+                                            seoutcome6_list[
+                                                i + j
+                                            ] = sereport_table_6_changed_1[0]
+                                            sereport_table_6_changed_1.remove(
+                                                sereport_table_6_changed_1[0]
+                                            )
+                                        elif seoutcome6_list[i + j][1] == 4:
+                                            seoutcome6_list[
+                                                i + j
+                                            ] = sereport_table_6_changed_4[0]
+                                            sereport_table_6_changed_4.remove(
+                                                sereport_table_6_changed_4[0]
+                                            )
+                            for i in seoutcome6_list:
+                                sevalue_6 = sevalue_6 + i[3]
+
+                            # outcome for 5
+                            sevalue_7 = 0
+                            seoutcome7_list = [sereport_table_5[0]]
+                            for i in seoutcome7_list:
+                                sevalue_7 = sevalue_7 + i[3]
+                            sevalues = [
+                                sevalue_1,
+                                sevalue_2,
+                                sevalue_3,
+                                sevalue_4,
+                                sevalue_5,
+                                sevalue_6,
+                                sevalue_7,
+                            ]
+                            for n in sevalues:
+                                if n == max(sevalues):
+                                    second_value = n
+                                    monetary_transfer = -(
+                                        social_value - p[3] - second_value
+                                    )
+                                    res_revenue = res_revenue + monetary_transfer
+                                    p1_value = p1.loc[p[1], p[2]]
+                                    utility_random_1 = p1_value - monetary_transfer
+                                    print("utility for", p[0], ":", utility_random_1)
+                                    break
+                                else:
+                                    pass
+            break
+        else:
+            pass
+    utility_change_1 = utility_change_1 + (utility_truth_1 - utility_random_1)
+    if utility_random_1 > utility_truth_1:
+        bug = bug + 1
+
+print("bug =", bug)
+
+utility_change_1 = utility_change_1 / 10000
+print("average utility changed under truth-telling strategy:", utility_change_1)
+"""
+bug = 51
+average utility changed under truth-telling strategy: 1.9294
+"""
