@@ -2992,10 +2992,8 @@ for z in range(10000):
         for j in range(1, (len(random_outcome9_list) - i)):
             if random_outcome9_list[i][0] == random_outcome9_list[i + j][0] != 0:
                 if random_outcome9_list[i + j][1] == 1:
-                    random_outcome9_list[i + j] = random_report_table_9_changed_1[0]
-                    random_report_table_9_changed_1.remove(
-                        random_report_table_9_changed_1[0]
-                    )
+                    random_outcome9_list[i + j] = random_table_9_changed_1[0]
+                    random_table_9_changed_1.remove(random_table_9_changed_1[0])
                 elif random_outcome9_list[i + j][1] == 2:
                     random_outcome9_list[i + j] = random_table_9_changed_2[0]
                     random_table_9_changed_2.remove(random_table_9_changed_2[0])
