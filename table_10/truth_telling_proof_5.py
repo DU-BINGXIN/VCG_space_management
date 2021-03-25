@@ -24,7 +24,7 @@ def getIndexes(p, p_report):
 utility_change_1 = 0
 bug = 0  # initialize the number of situations when truth-telling strategy is not dominant strategy
 for z in range(10000):
-    consumer = 30
+    consumer = 25
     report_table = []
     random_table = []
     for i in range(consumer):
@@ -3702,23 +3702,23 @@ for z in range(10000):
     # fill the blank list
     while len(random_table_1) < 20:
         random_table_1.append([0, 1, 0, 0])
-    while len(random_table_2) < 10:
+    while len(random_table_2) < 20:
         random_table_2.append([0, 2, 0, 0])
-    while len(random_table_3) < 10:
+    while len(random_table_3) < 20:
         random_table_3.append([0, 3, 0, 0])
-    while len(random_table_4) < 10:
+    while len(random_table_4) < 20:
         random_table_4.append([0, 4, 0, 0])
-    while len(random_table_5) < 10:
+    while len(random_table_5) < 20:
         random_table_5.append([0, 5, 0, 0])
-    while len(random_table_6) < 10:
+    while len(random_table_6) < 20:
         random_table_6.append([0, 6, 0, 0])
-    while len(random_table_7) < 10:
+    while len(random_table_7) < 20:
         random_table_7.append([0, 7, 0, 0])
-    while len(random_table_8) < 10:
+    while len(random_table_8) < 20:
         random_table_8.append([0, 8, 0, 0])
-    while len(random_table_9) < 10:
+    while len(random_table_9) < 20:
         random_table_9.append([0, 9, 0, 0])
-    while len(random_table_10) < 10:
+    while len(random_table_10) < 20:
         random_table_10.append([0, 10, 0, 0])
 
     random_table_1.sort(key=takeValue, reverse=True)

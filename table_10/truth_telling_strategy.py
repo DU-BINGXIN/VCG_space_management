@@ -60,7 +60,7 @@ social_value_total_9 = 0
 res_revenue_total_10 = 0
 social_value_total_10 = 0
 for z in range(10000):
-    consumer = 30
+    consumer = 25
     report_1_table = []
     report_2_table = []
     report_3_table = []
@@ -343,23 +343,23 @@ for z in range(10000):
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
 
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
-    while len(report_table_3) < 10:
+    while len(report_table_3) < 20:
         report_table_3.append([0, 3, 0, 0])
-    while len(report_table_4) < 10:
+    while len(report_table_4) < 20:
         report_table_4.append([0, 4, 0, 0])
-    while len(report_table_5) < 10:
+    while len(report_table_5) < 20:
         report_table_5.append([0, 5, 0, 0])
-    while len(report_table_6) < 10:
+    while len(report_table_6) < 20:
         report_table_6.append([0, 6, 0, 0])
-    while len(report_table_7) < 10:
+    while len(report_table_7) < 20:
         report_table_7.append([0, 7, 0, 0])
-    while len(report_table_8) < 10:
+    while len(report_table_8) < 20:
         report_table_8.append([0, 8, 0, 0])
-    while len(report_table_9) < 10:
+    while len(report_table_9) < 20:
         report_table_9.append([0, 9, 0, 0])
-    while len(report_table_10) < 10:
+    while len(report_table_10) < 20:
         report_table_10.append([0, 10, 0, 0])
 
     def takeValue(elem):
