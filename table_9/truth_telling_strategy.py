@@ -60,7 +60,7 @@ social_value_total_9 = 0
 res_revenue_total_10 = 0
 social_value_total_10 = 0
 for z in range(10000):
-    consumer = 30
+    consumer = 20
     report_1_table = []
     report_2_table = []
     report_3_table = []

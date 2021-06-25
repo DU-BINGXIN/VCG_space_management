@@ -2,7 +2,7 @@ import pandas as pd
 import random
 import time
 
-start = time.clock()
+start = time.process_time()
 # table = 10, course = 3, consumer = 30
 
 
@@ -25,8 +25,8 @@ def getIndexes(p, p_report):
 
 utility_change_1 = 0
 bug = 0  # initialize the number of situations when truth-telling strategy is not dominant strategy
-for z in range(10000):
-    consumer = 30
+for z in range(100):
+    consumer = 10
     report_table = []
     random_table = []
     for i in range(consumer):
@@ -436,7 +436,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -1898,7 +1898,7 @@ for z in range(10000):
                         if p[0] == 1:
                             print(
                                 z,
-                                "---truth---" "allocate",
+                                "---truth---", outcome_m,"allocate",
                                 "table",
                                 p[1],
                                 " and course",
@@ -3869,7 +3869,7 @@ for z in range(10000):
                                     break
                                 else:
                                     pass
-            break
+            break    
         else:
             pass
 
@@ -3920,7 +3920,7 @@ for z in range(10000):
     # fill the blank list
     while len(random_table_1) < 20:
         random_table_1.append([0, 1, 0, 0])
-    while len(random_table_2) < 10:
+    while len(random_table_2) < 20:
         random_table_2.append([0, 2, 0, 0])
     while len(random_table_3) < 10:
         random_table_3.append([0, 3, 0, 0])
@@ -5365,7 +5365,7 @@ for z in range(10000):
                         if p[0] == 1:
                             print(
                                 z,
-                                "---random---" "allocate",
+                                "---random---", random_outcome_m, "allocate",
                                 "table",
                                 p[1],
                                 " and course",
@@ -7337,7 +7337,7 @@ for z in range(10000):
                                     break
                                 else:
                                     pass
-            break
+            break    
         else:
             pass
     utility_change_1 = utility_change_1 + (utility_truth_1 - utility_random_1)
@@ -7349,7 +7349,7 @@ print("bug =", bug)
 utility_change_1 = utility_change_1 / 10000
 print("average utility changed under truth-telling strategy:", utility_change_1)
 
-elapsed = time.clock() - start
+elapsed = time.process_time() - start
 print("Time used:", elapsed)
 """
 bug = 10

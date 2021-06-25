@@ -60,7 +60,7 @@ social_value_total_9 = 0
 res_revenue_total_10 = 0
 social_value_total_10 = 0
 for z in range(10000):
-    consumer = 30
+    consumer = 20
     report_1_table = []
     report_2_table = []
     report_3_table = []
@@ -342,8 +342,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -1433,8 +1432,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -4915,8 +4913,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -8397,8 +8394,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -11879,8 +11875,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -15361,8 +15356,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -18843,8 +18837,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -22325,8 +22318,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -25807,8 +25799,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
@@ -29288,8 +29279,7 @@ for z in range(10000):
     # fill the blank list
     while len(report_table_1) < 20:
         report_table_1.append([0, 1, 0, 0])
-
-    while len(report_table_2) < 10:
+    while len(report_table_2) < 20:
         report_table_2.append([0, 2, 0, 0])
     while len(report_table_3) < 10:
         report_table_3.append([0, 3, 0, 0])
