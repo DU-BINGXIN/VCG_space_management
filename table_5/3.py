@@ -25,7 +25,7 @@ for run in range(num_steps):
     wandb.init(
         entity="dbx",
         project="VCG_Booking",
-        group="FCFS_res_fee0_VCG_cancel_fee0",
+        group="FCFS_res_fee3_VCG_cancel_fee3",
         name=f"run{run}",
     )
     random.seed(run)
@@ -208,15 +208,15 @@ for run in range(num_steps):
                     v = list(v)
                     if v[0][-1] == "1":
                         # print(v[-1])
-                        v[-1] = v[-1] - 0
+                        v[-1] = v[-1] - 3
                     if v[0][-1] == "2":
-                        v[-1] = v[-1] - 0
+                        v[-1] = v[-1] - 6
                     if v[0][-1] == "3":
-                        v[-1] = v[-1] - 0
+                        v[-1] = v[-1] - 9
                     if v[0][-1] == "4":
-                        v[-1] = v[-1] - 0
+                        v[-1] = v[-1] - 12
                     if v[0][-1] == "5":
-                        v[-1] = v[-1] - 0
+                        v[-1] = v[-1] - 15
                     if v[-1] >= 0:
                         value_priced.append(v)
                 FCFS_party_preference_dict[key] = value_priced
@@ -271,7 +271,7 @@ for run in range(num_steps):
         fcfs_len = len(FCFS_party_preference_list)
         # print("FCFS_party_preference_list:", FCFS_party_preference_list)
         for allo in final_allocation:
-            table_revenue += int(allo[1][0][-1]) * 5
+            table_revenue += int(allo[1][0][-1]) * 3
             course_revenue += allo[1][0].count("A") * 10 + allo[1][0].count("B") * 15
             utility_FCFS += allo[1][1]
 
@@ -533,7 +533,7 @@ for run in range(num_steps):
                 monetary_transfer
                 + seat_allo[1].count("A") * 10
                 + seat_allo[1].count("B") * 15
-                - party_cancelled * 0
+                - party_cancelled * 3
             )
             print("sevcg_social_value:", sevcg_social_value)
             print("sevcg_allocation:", sevcg_allocation)
@@ -550,6 +550,10 @@ for run in range(num_steps):
             {
                 "FCFS_revenue": FCFS_revenue,
                 "VCG_revenue": VCG_revenue,
+                "FCFS_utility": utility_FCFS,
+                "VCG_utility": vcg_utility,
+                "FCFS_social": FCFS_social,
+                "VCG_social": vcg_social_value,
             }
         )
     wandb.finish(exit_code=1)
@@ -563,6 +567,10 @@ for run in range(num_steps):
     # print(party_cancelled, party_changed)
     total_VCG_revenue_list.append(sum(VCG_revenue_list))
     total_FCFS_revenue_list.append(total_FCFS_revenue)
+    total_VCG_social_list.append(sum(VCG_social_list))
+    total_FCFS_social_list.append(total_FCFS_social)
+    total_VCG_utility_list.append(sum(VCG_utility_list))
+    total_FCFS_utility_list.append(total_FCFS_utility)
     print("VCG_revenue_list:", VCG_revenue_list)
     print("VCG_social_list:", VCG_social_list)
     print("VCG_utility_list:", VCG_utility_list)
@@ -619,39 +627,42 @@ for run in range(num_steps):
 #         #         )
 #         #     }
 #         # )
+wandb.init(
+    entity="dbx",
+    project="VCG_Booking",
+    group="FCFS_res_fee3_VCG_cancel_fee3",
+    name="FCFS_VCG_comparison",
+)
 
 columns = ["Total_FCFS_revenue", "Total_VCG_revenue"]
 revenue_dict = {
     "Total_FCFS_revenue": total_FCFS_revenue_list,
     "Total_VCG_revenue": total_VCG_revenue_list,
 }
+# print(revenue_dict)
 revenue_data = pd.DataFrame(revenue_dict)
+# print(revenue_data)
 xs = [i for i in range(num_steps)]
 ys = [revenue_data[c][:num_steps] for c in columns]
 
-# columns_u = ["Total_FCFS_utility", "Total_VCG_utility"]
-# utility_dict = {
-#     "Total_FCFS_utility": total_FCFS_utility_list,
-#     "Total_VCG_utility": total_VCG_utility_list,
-# }
-# utility_data = pd.DataFrame(utility_dict)
-# xs_u = [i for i in range(num_steps)]
-# ys_u = [utility_data[c][:num_steps] for c in columns_u]
+columns_u = ["Total_FCFS_utility", "Total_VCG_utility"]
+utility_dict = {
+    "Total_FCFS_utility": total_FCFS_utility_list,
+    "Total_VCG_utility": total_VCG_utility_list,
+}
+utility_data = pd.DataFrame(utility_dict)
+xs_u = [i for i in range(num_steps)]
+ys_u = [utility_data[c][:num_steps] for c in columns_u]
 
-# columns_s = ["Total_FCFS_social", "Total_VCG_social"]
-# social_dict = {
-#     "Total_FCFS_social": total_FCFS_social_list,
-#     "Total_VCG_social": total_VCG_social_list,
-# }
-# social_data = pd.DataFrame(social_dict)
-# xs_s = [i for i in range(num_steps)]
-# ys_s = [social_data[c][:num_steps] for c in columns_s]
-wandb.init(
-    entity="dbx",
-    project="VCG_Booking",
-    group="FCFS_res_fee0_VCG_cancel_fee0",
-    name="total_revenue_comparison",
-)
+columns_s = ["Total_FCFS_social", "Total_VCG_social"]
+social_dict = {
+    "Total_FCFS_social": total_FCFS_social_list,
+    "Total_VCG_social": total_VCG_social_list,
+}
+social_data = pd.DataFrame(social_dict)
+xs_s = [i for i in range(num_steps)]
+ys_s = [social_data[c][:num_steps] for c in columns_s]
+
 wandb.log(
     {
         "total_rev": wandb.plot.line_series(
@@ -660,18 +671,18 @@ wandb.log(
     }
 )
 
-# # wandb.log(
-# #     {
-# #         "total_uti": wandb.plot.line_series(
-# #             xs=xs_u, ys=ys_u, keys=columns_u, title="Total Utility Metrix"
-# #         )
-# #     }
-# # )
+wandb.log(
+    {
+        "total_uti": wandb.plot.line_series(
+            xs=xs_u, ys=ys_u, keys=columns_u, title="Total Consumer Utility"
+        )
+    }
+)
 
-# # wandb.log(
-# #     {
-# #         "total_soc": wandb.plot.line_series(
-# #             xs=xs_s, ys=ys_s, keys=columns_s, title="Total Social Value Metrix"
-# #         )
-# #     }
-# # )
+wandb.log(
+    {
+        "total_soc": wandb.plot.line_series(
+            xs=xs_s, ys=ys_s, keys=columns_s, title="Total Social Value"
+        )
+    }
+)
